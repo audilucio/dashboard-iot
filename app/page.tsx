@@ -44,6 +44,53 @@ export default function Home() {
     }
   }
 
+  async function clearHistory() {
+    try {
+      await axios.delete(
+        "http://localhost:3001/weight"
+      );
+
+      setWeights([]);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  function exportCSV() {
+    const rows = [
+      ["Peso", "Litros", "Data"],
+      ...weights.map((item) => [
+        item.weight,
+        (item.weight / 1.03).toFixed(2),
+        new Date(item.createdAt).toLocaleString(),
+      ]),
+    ];
+
+    const csvContent =
+      "data:text/csv;charset=utf-8," +
+      rows.map((e) => e.join(",")).join("\n");
+
+    const encodedUri =
+      encodeURI(csvContent);
+
+    const link =
+      document.createElement("a");
+
+    link.setAttribute(
+      "href",
+      encodedUri
+    );
+
+    link.setAttribute(
+      "download",
+      "historico.csv"
+    );
+
+    document.body.appendChild(link);
+
+    link.click();
+  }
+
   useEffect(() => {
     loadWeights();
 
@@ -59,9 +106,12 @@ export default function Home() {
       ? weights[weights.length - 1]
       : null;
 
+  const litros = latest
+    ? (latest.weight / 1.03).toFixed(2)
+    : "--";
+
   return (
     <main className="min-h-screen bg-gray-100">
-      {/* HEADER */}
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between">
           <div>
@@ -74,23 +124,29 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
-            <button className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-xl font-medium transition">
-              Histórico
+          <div className="flex gap-3">
+
+            <button
+              onClick={exportCSV}
+              className="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-xl"
+            >
+              Exportar Histórico
             </button>
 
-            <button className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-5 py-2 rounded-xl font-medium transition">
-              Gráfico
+            <button
+              onClick={clearHistory}
+              className="bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded-xl"
+            >
+              Limpar Histórico
             </button>
           </div>
         </div>
       </header>
 
-      {/* CONTEÚDO */}
       <div className="max-w-7xl mx-auto p-6">
 
         {/* CARDS */}
-        <div className="grid md:grid-cols-4 gap-6 mb-8">
+        <div className="grid md:grid-cols-3 gap-6 mb-8">
 
           <div className="bg-white rounded-3xl shadow p-6">
             <p className="text-gray-500">
@@ -104,16 +160,12 @@ export default function Home() {
 
           <div className="bg-white rounded-3xl shadow p-6">
             <p className="text-gray-500">
-              Status
+              Litros Estimados
             </p>
 
-            <div className="flex items-center gap-2 mt-5">
-              <div className="w-3 h-3 rounded-full bg-green-500"></div>
-
-              <span className="text-green-600 font-semibold">
-                Online
-              </span>
-            </div>
+            <h2 className="text-5xl font-bold text-green-600 mt-3">
+              {litros} L
+            </h2>
           </div>
 
           <div className="bg-white rounded-3xl shadow p-6">
@@ -125,37 +177,14 @@ export default function Home() {
               {weights.length}
             </h2>
           </div>
-
-          <div className="bg-white rounded-3xl shadow p-6">
-            <p className="text-gray-500">
-              Última Atualização
-            </p>
-
-            <p className="text-lg font-medium text-gray-700 mt-4">
-              {latest
-                ? new Date(
-                    latest.createdAt
-                  ).toLocaleTimeString()
-                : "--"}
-            </p>
-          </div>
         </div>
 
         {/* GRÁFICO */}
         <div className="bg-white rounded-3xl shadow p-6">
 
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-gray-800">
-              Histórico de Pesagem
-            </h2>
-
-            <button
-              onClick={loadWeights}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl transition"
-            >
-              Atualizar
-            </button>
-          </div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-6">
+            Histórico em Tempo Real
+          </h2>
 
           <div className="w-full h-[450px]">
             <ResponsiveContainer>
@@ -176,41 +205,6 @@ export default function Home() {
                 />
               </LineChart>
             </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* HISTÓRICO */}
-        <div className="bg-white rounded-3xl shadow p-6 mt-8">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6">
-            Histórico Recente
-          </h2>
-
-          <div className="space-y-4">
-            {weights
-              .slice(-10)
-              .reverse()
-              .map((item) => (
-                <div
-                  key={item.id}
-                  className="flex items-center justify-between border-b pb-3"
-                >
-                  <div>
-                    <p className="font-semibold text-gray-800">
-                      {item.weight} kg
-                    </p>
-
-                    <p className="text-gray-500 text-sm">
-                      {new Date(
-                        item.createdAt
-                      ).toLocaleString()}
-                    </p>
-                  </div>
-
-                  <span className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm">
-                    Registrado
-                  </span>
-                </div>
-              ))}
           </div>
         </div>
       </div>
