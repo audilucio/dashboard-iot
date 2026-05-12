@@ -25,7 +25,7 @@ export default function Home() {
   async function loadWeights() {
     try {
       const response = await axios.get(
-        "http://localhost:3001/weight"
+        "https://SUA_API.up.railway.app/weight"
       );
 
       const formatted = response.data
